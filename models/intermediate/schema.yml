@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: int_orders_enriched
+    description: "Orders joined to items and payments. Includes order-level revenue, freight, payment type, delivery status, and days to deliver. One row per order."
+    columns:
+      - name: order_id
+        description: "Primary key. Unique identifier for each order."
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Foreign key to stg_customers."
+        tests:
+          - not_null
+      - name: order_status
+        description: "Current status of the order."
+        tests:
+          - not_null
+      - name: gross_revenue
+        description: "Sum of item prices for the order before freight."
+        tests:
+          - not_null
+      - name: total_payment_value
+        description: "Total amount paid by the customer including all payment methods."
+        tests:
+          - not_null
+      - name: is_late_delivery
+        description: "True if the order was delivered after the estimated delivery date."
+        tests:
+          - not_null
+
+  - name: int_customer_orders
+    description: "Customer-level order history and behavior metrics. Includes total orders, revenue, avg order value, delivery experience, and customer segment. One row per unique customer."
+    columns:
+      - name: customer_unique_id
+        description: "Primary key. True unique customer identifier across multiple orders."
+        tests:
+          - not_null
+          - unique
+      - name: total_orders
+        description: "Total number of delivered orders placed by this customer."
+        tests:
+          - not_null
+      - name: customer_segment
+        description: "Segment based on order count: One-Time Buyer, Repeat Buyer, or Loyal Buyer."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['No Orders', 'One-Time Buyer', 'Repeat Buyer', 'Loyal Buyer']
