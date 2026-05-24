@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Cleaned and renamed orders table. One row per order."
+    columns:
+      - name: order_id
+        description: "Primary key. Unique identifier for each order."
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Foreign key to stg_customers."
+        tests:
+          - not_null
+      - name: order_status
+        description: "Current status of the order."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+  - name: stg_order_items
+    description: "Cleaned order items. One row per item within an order."
+    columns:
+      - name: order_id
+        description: "Foreign key to stg_orders."
+        tests:
+          - not_null
+      - name: product_id
+        description: "Foreign key to stg_products."
+        tests:
+          - not_null
+      - name: seller_id
+        description: "Foreign key to stg_sellers."
+        tests:
+          - not_null
+      - name: item_price
+        description: "Price of the individual item in BRL."
+        tests:
+          - not_null
+
+  - name: stg_customers
+    description: "Cleaned customers table. One row per customer_id."
+    columns:
+      - name: customer_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
+      - name: customer_unique_id
+        description: "True unique customer identifier across multiple orders."
+        tests:
+          - not_null
+
+  - name: stg_sellers
+    description: "Cleaned sellers table. One row per seller."
+    columns:
+      - name: seller_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_products
+    description: "Cleaned products table. One row per product."
+    columns:
+      - name: product_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_order_payments
+    description: "Cleaned payments table. One row per payment sequence per order."
+    columns:
+      - name: order_id
+        description: "Foreign key to stg_orders."
+        tests:
+          - not_null
+      - name: payment_value
+        description: "Payment amount in BRL."
+        tests:
+          - not_null
+
+  - name: stg_order_reviews
+    description: "Cleaned order reviews. One row per review linked to an order."
+    columns:
+      - name: order_id
+        description: "Foreign key to stg_orders."
+        tests:
+          - not_null
+      - name: review_score
+        description: "Customer review score from 1 to 5."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
