@@ -25,31 +25,22 @@ Source: Brazilian E-Commerce Public Dataset by Olist (Kaggle)
 
 ## Project Architecture
 
-```text
-Raw CSVs (Olist Kaggle)
-        |
-        v
-Python ingestion script (loads CSVs into DuckDB raw schema)
-        |
-        v
-dbt Staging Layer
-  stg_orders, stg_order_items, stg_customers,
-  stg_sellers, stg_products, stg_order_payments, stg_order_reviews
-  (rename columns, cast types, filter nulls)
-        |
-        v
-dbt Intermediate Layer
-  int_orders_enriched (orders joined to items and payments)
-  int_customer_orders (customer-level order history and segmentation)
-        |
-        v
-dbt Mart Layer
-  mart_revenue_summary (daily revenue KPIs)
-  mart_customer_segments (customer segmentation and revenue tiers)
-  mart_seller_performance (seller KPIs and delivery performance)
-        |
-        v
-Analysis queries (revenue_insights.sql)
+```mermaid
+flowchart TD
+    A[Raw CSVs\nOlist Kaggle Dataset] --> B[Python Ingestion Script\nloads into DuckDB raw schema]
+    B --> C[dbt Staging Layer\nstg_orders, stg_customers, stg_products\nrename, cast types, filter nulls]
+    C --> D[dbt Intermediate Layer\nint_orders_enriched\nint_customer_orders]
+    D --> E[dbt Mart Layer\nmart_revenue_summary\nmart_customer_segments\nmart_seller_performance]
+    E --> F[Analysis Queries\nrevenue_insights.sql]
+    E --> G[BI Layer\nTableau or Looker Studio ready]
+
+    style A fill:#E6F1FB,stroke:#378ADD,color:#0C447C
+    style B fill:#EAF3DE,stroke:#639922,color:#27500A
+    style C fill:#EAF3DE,stroke:#639922,color:#27500A
+    style D fill:#FAEEDA,stroke:#BA7517,color:#633806
+    style E fill:#EEEDFE,stroke:#7F77DD,color:#3C3489
+    style F fill:#E1F5EE,stroke:#1D9E75,color:#085041
+    style G fill:#E1F5EE,stroke:#1D9E75,color:#085041
 ```
 
 ## Lineage Graph
