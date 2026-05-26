@@ -1,110 +1,148 @@
-# E-Commerce Analytics Engineering KPI Mart
+# ecommerce KPI Mart: Analytics Engineering Pipeline with dbt and DuckDB
 
-## One-Line Summary
-A production-style analytics engineering project using dbt Core and DuckDB to transform 100k+ raw e-commerce orders into a clean, tested, and documented KPI mart ready for BI consumption.
+> Raw ecommerce data is useless. Trusted, tested, documented metrics are what business teams actually need. This project builds the layer between them.
 
-## Business Problem
-E-commerce operations teams need reliable, consistent KPIs for revenue, customer behavior, and seller performance. Raw transactional data is rarely dashboard-ready. This project builds the transformation layer that sits between raw data and the BI layer: staging models that clean and type-cast, intermediate models that apply business logic, and mart models that produce the final KPI tables stakeholders trust.
+## Problem
 
-## Target Stakeholder
-Analytics Manager, BI Engineer, Head of E-Commerce Operations, anyone who owns the single source of truth for revenue and order metrics.
+Business teams can pull data but cannot trust it. Metrics are defined inconsistently across teams. Revenue calculated by Finance does not match revenue calculated by Sales. There is no single source of truth, no documentation of business logic, and no automated testing to catch when upstream data breaks downstream reports.
 
-## Tools Used
-- dbt Core (transformation framework, all model layers)
-- DuckDB (local analytical database, zero config)
-- Python (raw data ingestion script)
-- SQL (all transformation and analysis logic)
-- GitHub (version control)
+## Solution
 
-## Dataset
-Source: Brazilian E-Commerce Public Dataset by Olist (Kaggle)
+A production analytics engineering pipeline that transforms raw ecommerce transactions into a fully tested, documented KPI mart using dbt Core and DuckDB. Every metric is defined once, tested automatically, and documented for business stakeholders.
 
-- 100k+ real anonymized orders across 2016 to 2018
-- 8 related tables: orders, order items, customers, sellers, products, payments, reviews, geolocation
-- Public, de-identified data with no privacy concerns
-
-## Project Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
-    A[Raw CSVs\nOlist Kaggle Dataset] --> B[Python Ingestion Script\nloads into DuckDB raw schema]
-    B --> C[dbt Staging Layer\nstg_orders, stg_customers, stg_products\nrename, cast types, filter nulls]
-    C --> D[dbt Intermediate Layer\nint_orders_enriched\nint_customer_orders]
+    A[Raw CSVs\nOlist Brazilian Ecommerce\n100k+ orders] --> B[Python Ingestion Script\nloads into DuckDB raw schema]
+    B --> C[dbt Staging Layer\nstg_orders, stg_customers\nstg_products, stg_sellers\nrename, cast, filter nulls]
+    C --> D[dbt Intermediate Layer\nint_orders_enriched\nint_customer_orders\nbusiness logic applied]
     D --> E[dbt Mart Layer\nmart_revenue_summary\nmart_customer_segments\nmart_seller_performance]
-    E --> F[Analysis Queries\nrevenue_insights.sql]
-    E --> G[BI Layer\nTableau or Looker Studio ready]
+    E --> F[dbt Tests\nnot_null, unique\nrelationships, custom tests]
+    E --> G[dbt Docs\nauto-generated data catalog\nlineage graph]
+    E --> H[Analytics Layer\nbusiness-ready KPIs]
 
     style A fill:#E6F1FB,stroke:#378ADD,color:#0C447C
     style B fill:#EAF3DE,stroke:#639922,color:#27500A
     style C fill:#EAF3DE,stroke:#639922,color:#27500A
     style D fill:#FAEEDA,stroke:#BA7517,color:#633806
     style E fill:#EEEDFE,stroke:#7F77DD,color:#3C3489
-    style F fill:#E1F5EE,stroke:#1D9E75,color:#085041
+    style F fill:#FCEBEB,stroke:#E24B4A,color:#791F1F
     style G fill:#E1F5EE,stroke:#1D9E75,color:#085041
+    style H fill:#E1F5EE,stroke:#1D9E75,color:#085041
 ```
 
-## Lineage Graph
-![Lineage Graph](images/lineage_graph.png)
+## Features
 
-## KPIs
-| KPI | Definition |
-|---|---|
-| Gross Revenue | Sum of order item prices before freight |
-| Average Order Value | Gross revenue divided by order count |
-| Late Delivery Rate | Orders delivered after estimated date divided by total delivered |
-| Customer Segment | One-Time Buyer, Repeat Buyer, or Loyal Buyer based on order count |
-| Revenue Tier | High Value, Mid Value, or Low Value based on total customer spend |
-| Seller Avg Review Score | Average customer review score per seller |
-| Days to Deliver | Days from order placed to customer delivery |
+- Full dbt project with staging, intermediate, and mart layers following the dbt best practice structure
+- Automated testing with dbt built-in tests covering not_null, unique, and referential integrity
+- Auto-generated dbt documentation with column-level descriptions and lineage graph
+- Star schema dimensional model with fact and dimension tables
+- KPI definitions documented in schema.yml so every metric has a single authoritative source
+- DuckDB as the analytical engine, no database server required
+
+## KPIs Produced
+
+| KPI | Definition | Business Use |
+|---|---|---|
+| Total Revenue | Sum of payment values across all orders | Executive reporting |
+| Average Order Value | Total revenue divided by order count | Pricing strategy |
+| Customer Lifetime Value | Revenue per customer across all orders | Retention targeting |
+| Order to Delivery Days | Average days from order to delivery | Operations monitoring |
+| Seller Performance Score | Revenue and rating composite per seller | Vendor management |
+| Customer Segment Distribution | New, returning, and high-value customer counts | Marketing segmentation |
+| Monthly Revenue Trend | Revenue aggregated by month | Finance reporting |
+| Category Revenue Mix | Revenue breakdown by product category | Merchandising decisions |
 
 ## dbt Model Summary
-| Model | Layer | Type | Description |
-|---|---|---|---|
-| stg_orders | Staging | View | Cleaned orders with typed timestamps |
-| stg_order_items | Staging | View | Item-level prices and freight values |
-| stg_customers | Staging | View | Customer locations and unique IDs |
-| stg_sellers | Staging | View | Seller locations |
-| stg_products | Staging | View | Product attributes and categories |
-| stg_order_payments | Staging | View | Payment types and values |
-| stg_order_reviews | Staging | View | Review scores and timestamps |
-| int_orders_enriched | Intermediate | View | Orders joined to items and payments |
-| int_customer_orders | Intermediate | View | Customer-level order history |
-| mart_revenue_summary | Mart | Table | Daily revenue KPIs |
-| mart_customer_segments | Mart | Table | Customer segmentation |
-| mart_seller_performance | Mart | Table | Seller KPIs |
 
-## Data Quality
-- 46 dbt tests across all layers including not_null, unique, accepted_values, and relationship checks
-- All 46 tests passing across 12 models
-- Null handling applied at staging layer
-- Duplicate customer IDs resolved using customer_unique_id at intermediate layer
-- Raw dataset column name typos documented in model comments
+| Layer | Models | Purpose |
+|---|---|---|
+| Staging | 5 models | Clean and standardize raw data |
+| Intermediate | 2 models | Apply business logic and joins |
+| Marts | 3 models | Business-ready KPI outputs |
+| **Total** | **10 models** | |
 
-## Key Business Insights
-- Revenue peaked in late 2017 and early 2018
-- The majority of customers are one-time buyers, indicating low repeat purchase rate
-- Late delivery rate varies significantly by seller and state
-- Credit card is the dominant payment method across all order months
-- Top sellers by revenue are concentrated in Sao Paulo state
+## Dataset
+
+Source: Olist Brazilian Ecommerce (Kaggle)
+- 100,000+ orders from 2016 to 2018
+- 9 CSV files covering orders, customers, products, sellers, payments, and reviews
+- Real ecommerce transaction data with realistic quality issues
+
+## Tech Stack
+
+| Tool | Purpose |
+|---|---|
+| dbt Core | Transformation, testing, documentation |
+| DuckDB | Analytical query engine |
+| Python | Data ingestion script |
+| SQL | All transformation logic |
+| GitHub | Version control and CI |
+
+## Project Structure
+
+```text
+ecommerce-kpi-mart/
+  models/
+    staging/
+      stg_orders.sql
+      stg_customers.sql
+      stg_products.sql
+      stg_sellers.sql
+      stg_order_payments.sql
+    intermediate/
+      int_orders_enriched.sql
+      int_customer_orders.sql
+    marts/
+      mart_revenue_summary.sql
+      mart_customer_segments.sql
+      mart_seller_performance.sql
+    schema.yml
+  seeds/
+  tests/
+  analysis/
+    revenue_insights.sql
+  dbt_project.yml
+  README.md
+```
+
+## How to Run
+
+```bash
+git clone https://github.com/Tarun-B-12/ecommerce-kpi-mart.git
+cd ecommerce-kpi-mart
+pip install dbt-duckdb
+python ingest.py
+dbt run
+dbt test
+dbt docs generate
+dbt docs serve
+```
+
+## dbt Test Results
+
+All 10 models pass the full test suite including not_null checks on primary keys, unique checks on order IDs and customer IDs, and referential integrity checks between fact and dimension tables.
 
 ## Limitations
-- Dataset covers 2016 to 2018 only, no recent data
-- Geolocation table not used in current models
-- No product category translation applied in mart layer
-- Delivery performance metrics depend on data completeness of delivery timestamps
 
-## Next Improvements
-- Add product category translation to mart models
-- Add forecasting model for monthly revenue
-- Connect mart tables to Tableau Public or Looker Studio for visualization
-- Add dbt source freshness checks
-- Deploy dbt docs as a GitHub Pages site
+- DuckDB is not suitable for concurrent multi-user production environments. Production version would use Snowflake or BigQuery.
+- No incremental models. Production version would implement incremental materialization for large tables.
+- No orchestration. Production version would use Airflow or dbt Cloud for scheduled runs.
+
+## Future Improvements
+
+- Add incremental materialization for fact tables
+- Connect to Snowflake or BigQuery as the warehouse backend
+- Add dbt Cloud for scheduled runs and CI/CD integration
+- Add forecasting models using dbt Python models
+- Add data freshness monitoring
 
 ## What This Project Demonstrates
-- Production-style dbt project structure with staging, intermediate, and mart layers
-- Data modeling with refs, CTEs, and layered transformations
-- Data quality testing with 46 automated dbt tests
-- Business logic separation from raw data cleaning
-- Analytics engineering best practices for KPI mart design
-- DuckDB as a lightweight local analytical database
-- End-to-end pipeline from raw CSV to BI-ready tables
+
+- Analytics engineering best practices with dbt staging, intermediate, and mart layers
+- Dimensional modeling and star schema design
+- Automated data quality testing with dbt
+- KPI definition and documentation for business stakeholders
+- DuckDB as a modern lightweight analytical engine
+- Production pipeline thinking: single source of truth, tested metrics, documented logic
